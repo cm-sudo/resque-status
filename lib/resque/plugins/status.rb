@@ -28,7 +28,7 @@ module Resque
     # This job would iterate num times updating the status as it goes. At the end
     # we update the status telling anyone listening to this job that its complete.
     module Status
-      VERSION = '0.5.0'
+      VERSION = '0.5.1'
 
       STATUS_QUEUED = 'queued'
       STATUS_WORKING = 'working'
@@ -159,10 +159,11 @@ module Resque
       def safe_perform!
         set_status({'status' => STATUS_WORKING})
         perform
-        if status && status.failed?
-          on_failure(status.message) if respond_to?(:on_failure)
+        current_status = status
+        if current_status && current_status.failed?
+          on_failure(current_status.message) if respond_to?(:on_failure)
           return
-        elsif status && !status.completed?
+        elsif current_status && !current_status.completed?
           completed
         end
         on_success if respond_to?(:on_success)
